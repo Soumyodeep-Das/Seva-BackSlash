@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { account } from '../../lib/appwrite';
 import { router } from 'expo-router';
+import { Platform } from 'react-native';
 
 export default function TabLayout() {
   useEffect(() => {
@@ -13,7 +14,6 @@ export default function TabLayout() {
     try {
       await account.get();
     } catch (error) {
-      // If we can't get the account, user is not logged in, redirect to login
       router.replace('/(auth)/login');
     }
   }
@@ -26,9 +26,16 @@ export default function TabLayout() {
         tabBarStyle: {
           borderTopWidth: 1,
           borderTopColor: '#E5E7EB',
-          height: 60,
-          paddingBottom: 8,
+          height: Platform.OS === 'ios' ? 88 : 60,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
           paddingTop: 8,
+        },
+        headerStyle: {
+          backgroundColor: '#4C6FFF',
+        },
+        headerTintColor: '#FFFFFF',
+        headerTitleStyle: {
+          fontWeight: '600',
         },
       }}
     >
@@ -42,11 +49,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="appointments"
+        name="search"
         options={{
-          title: 'Appointments',
+          title: 'Medicine',
           tabBarIcon: ({ size, color }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
+            <Ionicons name="search-outline" size={size} color={color} />
           ),
         }}
       />

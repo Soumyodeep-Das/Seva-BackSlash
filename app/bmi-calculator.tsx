@@ -39,7 +39,7 @@ export default function BMICalculatorScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#1F2937" />
+          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <Text style={styles.title}>BMI Calculator</Text>
       </View>
@@ -71,7 +71,10 @@ export default function BMICalculatorScreen() {
               <Text style={styles.bmiValue}>
                 Your BMI: {bmi.toFixed(1)}
               </Text>
-              <Text style={styles.category}>
+              <Text style={[
+                styles.category,
+                { color: category === 'Normal weight' ? '#4CAF50' : '#FF3B30' }
+              ]}>
                 Category: {category}
               </Text>
               
@@ -112,15 +115,13 @@ export default function BMICalculatorScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F5F7FA',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#4C6FFF',
   },
   backButton: {
     marginRight: 16,
@@ -128,7 +129,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#FFFFFF',
   },
   content: {
     flex: 1,
@@ -136,8 +137,8 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 16,
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -145,7 +146,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
   },
   calculateButton: {
     marginTop: 24,
@@ -162,7 +163,6 @@ const styles = StyleSheet.create({
   },
   category: {
     fontSize: 18,
-    color: '#4C6FFF',
     marginBottom: 24,
   },
   scaleContainer: {
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   },
   recommendationCard: {
     backgroundColor: '#F3F4F6',
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 16,
     width: '100%',
   },
