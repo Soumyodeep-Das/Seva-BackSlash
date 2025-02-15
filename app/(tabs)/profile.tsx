@@ -1,10 +1,30 @@
+import { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Button } from '../../components/Button';
-import { account } from '../../lib/appwrite';
+import { account, databases, USERS_COLLECTION, UserProfile, defaultProfileImages } from '../../lib/appwrite';
 
 export default function ProfileScreen() {
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadUserProfile();
+  }, []);
+
+  async function loadUserProfile() {
+    try {
+      const user = await account.get();
+      const profile = await databases.getDocument('default', USERS_COLLECTION, user.$id);
+      setUserProfile(profile as unknown as UserProfile);
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleLogout() {
     try {
       await account.deleteSession('current');
@@ -14,36 +34,55 @@ export default function ProfileScreen() {
     }
   }
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Image
-            source={{ uri: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde' }}
+            source={{ 
+              uri: userProfile?.photoUrl || 
+                   (userProfile?.gender === 'male' ? defaultProfileImages.male :
+                    userProfile?.gender === 'female' ? defaultProfileImages.female :
+                    'https://images.unsplash.com/photo-1511367461989-f85a21fda167')
+            }}
             style={styles.avatar}
           />
-          <Text style={styles.name}>John Doe</Text>
-          <Text style={styles.email}>john@example.com</Text>
+          <Text style={styles.name}>{userProfile?.name || 'User'}</Text>
+          <Text style={styles.email}>{userProfile?.email}</Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Personal Information</Text>
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Gender</Text>
+              <Text style={styles.infoValue}>{userProfile?.gender || 'Not specified'}</Text>
+            </View>
+            <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Age</Text>
-              <Text style={styles.infoValue}>30</Text>
+              <Text style={styles.infoValue}>{userProfile?.age || 'Not specified'}</Text>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Blood Group</Text>
-              <Text style={styles.infoValue}>O+</Text>
+              <Text style={styles.infoValue}>{userProfile?.bloodGroup || 'Not specified'}</Text>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Weight</Text>
-              <Text style={styles.infoValue}>75 kg</Text>
+              <Text style={styles.infoValue}>{userProfile?.weight ? `${userProfile.weight} kg` : 'Not specified'}</Text>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Height</Text>
-              <Text style={styles.infoValue}>175 cm</Text>
+              <Text style={styles.infoValue}>{userProfile?.height ? `${userProfile.height} cm` : 'Not specified'}</Text>
             </View>
           </View>
         </View>
@@ -52,7 +91,7 @@ export default function ProfileScreen() {
           <Text style={styles.sectionTitle}>Medical Information</Text>
           <View style={styles.infoCard}>
             <Text style={styles.medicalInfo}>
-              No medical conditions or allergies reported
+              {userProfile?.additionalInfo || 'No medical conditions or allergies reported'}
             </Text>
           </View>
         </View>
@@ -72,6 +111,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollContent: {
     padding: 24,

@@ -1,5 +1,7 @@
-import { StyleSheet, View, Text, ScrollView, Image } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Link } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/Button';
 
 export default function HomeScreen() {
@@ -12,41 +14,56 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.servicesGrid}>
-          <View style={styles.serviceCard}>
-            <Image
-              source={{ uri: 'https://images.unsplash.com/photo-1584982751601-97dcc096659c' }}
-              style={styles.serviceImage}
-            />
-            <Text style={styles.serviceTitle}>Find Doctor</Text>
-            <Text style={styles.serviceDescription}>
-              Book appointments with qualified doctors
-            </Text>
-            <Button title="Book Now" style={styles.serviceButton} />
-          </View>
+          <Link href="/medicine-reminder" asChild>
+            <TouchableOpacity style={styles.serviceCard}>
+              <Image
+                source={{ uri: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae' }}
+                style={styles.serviceImage}
+              />
+              <Text style={styles.serviceTitle}>Medicine Reminder</Text>
+              <Text style={styles.serviceDescription}>
+                Set reminders for your medications
+              </Text>
+              <View style={styles.cardFooter}>
+                <Ionicons name="time-outline" size={20} color="#4C6FFF" />
+                <Text style={styles.cardAction}>Set Reminders</Text>
+              </View>
+            </TouchableOpacity>
+          </Link>
 
-          <View style={styles.serviceCard}>
-            <Image
-              source={{ uri: 'https://images.unsplash.com/photo-1615461066841-6116e61058f4' }}
-              style={styles.serviceImage}
-            />
-            <Text style={styles.serviceTitle}>Blood Banks</Text>
-            <Text style={styles.serviceDescription}>
-              Find blood banks near you
-            </Text>
-            <Button title="Search" style={styles.serviceButton} />
-          </View>
+          <Link href="/bmi-calculator" asChild>
+            <TouchableOpacity style={styles.serviceCard}>
+              <Image
+                source={{ uri: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b' }}
+                style={styles.serviceImage}
+              />
+              <Text style={styles.serviceTitle}>BMI Calculator</Text>
+              <Text style={styles.serviceDescription}>
+                Calculate and track your BMI
+              </Text>
+              <View style={styles.cardFooter}>
+                <Ionicons name="calculator-outline" size={20} color="#4C6FFF" />
+                <Text style={styles.cardAction}>Calculate BMI</Text>
+              </View>
+            </TouchableOpacity>
+          </Link>
 
-          <View style={styles.serviceCard}>
-            <Image
-              source={{ uri: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d' }}
-              style={styles.serviceImage}
-            />
-            <Text style={styles.serviceTitle}>Medicine</Text>
-            <Text style={styles.serviceDescription}>
-              Set reminders for your medications
-            </Text>
-            <Button title="Set Reminder" style={styles.serviceButton} />
-          </View>
+          <Link href="/blood-banks" asChild>
+            <TouchableOpacity style={styles.serviceCard}>
+              <Image
+                source={{ uri: 'https://images.unsplash.com/photo-1615461066841-6116e61058f4' }}
+                style={styles.serviceImage}
+              />
+              <Text style={styles.serviceTitle}>Blood Banks</Text>
+              <Text style={styles.serviceDescription}>
+                Find blood banks near you
+              </Text>
+              <View style={styles.cardFooter}>
+                <Ionicons name="water-outline" size={20} color="#4C6FFF" />
+                <Text style={styles.cardAction}>Find Banks</Text>
+              </View>
+            </TouchableOpacity>
+          </Link>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -108,7 +125,13 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginBottom: 16,
   },
-  serviceButton: {
-    marginTop: 'auto',
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  cardAction: {
+    color: '#4C6FFF',
+    fontWeight: '600',
   },
 });

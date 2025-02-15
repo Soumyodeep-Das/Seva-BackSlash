@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, ScrollView } from 'react-native'; // Import Text
+import { StyleSheet, View, Text, ScrollView, Image } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Input } from '../../components/Input';
 import { Button } from '../../components/Button';
-import { account } from '../../lib/appwrite';
+import { account, databases, USERS_COLLECTION, defaultProfileImages } from '../../lib/appwrite';
+import { Picker } from '@react-native-picker/picker';
 
 type SignupStep = 1 | 2 | 3;
 
@@ -21,6 +22,7 @@ export default function Signup() {
 
   // Step 2 data
   const [name, setName] = useState('');
+  const [gender, setGender] = useState<'male' | 'female' | 'not-to-answer'>('not-to-answer');
   const [age, setAge] = useState('');
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
@@ -42,6 +44,7 @@ export default function Signup() {
     setError('');
 
     try {
+      // Create user account
       const user = await account.create(
         'unique()',
         email,
@@ -49,18 +52,28 @@ export default function Signup() {
         username
       );
 
+      // Create session
       await account.createEmailSession(email, password);
 
-      // Here you would typically save the additional user data to your database
-      console.log('Additional user data:', {
-        name,
-        age,
-        weight,
-        height,
-        bloodGroup,
-        profileImage,
-        additionalInfo,
-      });
+      // Save additional user data
+      const photoUrl = profileImage || (gender !== 'not-to-answer' ? defaultProfileImages[gender] : undefined);
+
+      await databases.createDocument(
+        'default',
+        USERS_COLLECTION,
+        user.$id,
+        {
+          email,
+          name,
+          gender,
+          age,
+          weight,
+          height,
+          bloodGroup,
+          additionalInfo,
+          photoUrl,
+        }
+      );
 
       router.replace('/(tabs)');
     } catch (err: any) {
@@ -128,6 +141,20 @@ export default function Signup() {
           icon="person-outline"
         />
 
+        <View style={styles.pickerContainer}>
+          <Text style={styles.label}>Gender</Text>
+          <View style={styles.picker}>
+            <Picker
+              selectedValue={gender}
+              onValueChange={(value) => setGender(value)}
+            >
+              <Picker.Item label="Prefer not to answer" value="not-to-answer" />
+              <Picker.Item label="Male" value="male" />
+              <Picker.Item label="Female" value="female" />
+            </Picker>
+          </View>
+        </View>
+
         <Input
           label="Age"
           placeholder="Enter your age"
@@ -176,6 +203,10 @@ export default function Signup() {
           style={styles.button}
         />
 
+        {profileImage && (
+          <Image source={{ uri: profileImage }} style={styles.previewImage} />
+        )}
+
         <Input
           label="Additional Medical Information"
           placeholder="Enter any medical conditions, allergies, etc."
@@ -203,6 +234,7 @@ export default function Signup() {
           {step === 3 && renderStep3()}
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
+          }
         </View>
 
         <Button
@@ -250,8 +282,31 @@ const styles = StyleSheet.create({
   form: {
     marginBottom: 24,
   },
+  pickerContainer: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 4,
+  },
+  picker: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+  },
   button: {
     marginTop: 16,
+  },
+  previewImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignSelf: 'center',
+    marginVertical: 16,
   },
   error: {
     color: '#EF4444',
