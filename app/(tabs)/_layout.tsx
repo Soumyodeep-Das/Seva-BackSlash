@@ -1,55 +1,61 @@
+import { useEffect } from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme } from 'react-native';
+import { account } from '../../lib/appwrite';
+import { router } from 'expo-router';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  async function checkAuth() {
+    try {
+      await account.get();
+    } catch (error) {
+      // If we can't get the account, user is not logged in, redirect to login
+      router.replace('/(auth)/login');
+    }
+  }
 
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        tabBarActiveTintColor: '#4C6FFF',
+        tabBarInactiveTintColor: '#6B7280',
         tabBarStyle: {
-          backgroundColor: isDark ? '#1A1A1A' : '#FFFFFF',
-          borderTopColor: isDark ? '#333333' : '#E5E5E5',
+          borderTopWidth: 1,
+          borderTopColor: '#E5E7EB',
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
         },
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: isDark ? '#888888' : '#666666',
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
           tabBarIcon: ({ size, color }) => (
-            <Ionicons name="home" size={size} color={color} />
+            <Ionicons name="home-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="doctors"
+        name="appointments"
         options={{
-          title: 'Doctors',
+          title: 'Appointments',
           tabBarIcon: ({ size, color }) => (
-            <Ionicons name="medical" size={size} color={color} />
+            <Ionicons name="calendar-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="blood-bank"
+        name="blood-banks"
         options={{
-          title: 'Blood Bank',
+          title: 'Blood Banks',
           tabBarIcon: ({ size, color }) => (
-            <Ionicons name="water" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="medicines"
-        options={{
-          title: 'Medicines',
-          tabBarIcon: ({ size, color }) => (
-            <Ionicons name="medkit" size={size} color={color} />
+            <Ionicons name="water-outline" size={size} color={color} />
           ),
         }}
       />
@@ -58,7 +64,7 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ size, color }) => (
-            <Ionicons name="person" size={size} color={color} />
+            <Ionicons name="person-outline" size={size} color={color} />
           ),
         }}
       />

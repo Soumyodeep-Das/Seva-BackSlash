@@ -1,210 +1,146 @@
 import { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Image } from 'react-native';
 import { Link, router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { createSession } from '../../lib/appwrite';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Input } from '../../components/Input';
+import { Button } from '../../components/Button';
+import { account } from '../../lib/appwrite';
 
-export default function LoginScreen() {
+export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
+  async function handleLogin() {
     if (!email || !password) {
       setError('Please fill in all fields');
       return;
     }
 
+    setLoading(true);
+    setError('');
+
     try {
-      setLoading(true);
-      setError('');
-      await createSession(email, password);
+      await account.createEmailSession(email, password);
+      const user = await account.get();
+      console.log('Logged in user:', user);
       router.replace('/(tabs)');
     } catch (err: any) {
-      setError(err.message || 'Failed to login');
+      setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}>
-      <LinearGradient
-        colors={['#4A90E2', '#50E3C2']}
-        style={StyleSheet.absoluteFill}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      />
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled">
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
+          <Image
+            source={{ uri: 'https://images.unsplash.com/photo-1584982751601-97dcc096659c' }}
+            style={styles.logo}
+          />
           <Text style={styles.title}>Welcome to Seva</Text>
-          <Text style={styles.subtitle}>Your Healthcare Companion</Text>
+          <Text style={styles.subtitle}>Sign in to continue</Text>
         </View>
 
         <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={24} color="#666" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-          </View>
+          <Input
+            label="Email"
+            placeholder="Enter your email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+            icon="mail-outline"
+          />
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={24} color="#666" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-          </View>
+          <Input
+            label="Password"
+            placeholder="Enter your password"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+            icon="lock-closed-outline"
+          />
 
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+          }
 
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+          <Button
+            title={loading ? 'Signing in...' : 'Sign In'}
             onPress={handleLogin}
-            disabled={loading}>
-            <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'Login'}</Text>
-          </TouchableOpacity>
+            style={styles.button}
+          />
 
           <Link href="/forgot-password" asChild>
-            <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-            </TouchableOpacity>
+            <Button title="Forgot Password?" variant="secondary" style={styles.button} />
           </Link>
+        </View>
 
-          <View style={styles.signupContainer}>
-            <Text style={styles.signupText}>Don't have an account? </Text>
-            <Link href="/signup" asChild>
-              <TouchableOpacity>
-                <Text style={styles.signupLink}>Sign Up</Text>
-              </TouchableOpacity>
-            </Link>
-          </View>
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Don't have an account?</Text>
+          <Link href="/signup" asChild>
+            <Button title="Sign Up" variant="outline" style={styles.button, styles.outBtn} />
+          </Link>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F9FAFB',
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
+    padding: 24,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginVertical: 32,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginBottom: 24,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1F2937',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 18,
-    color: '#fff',
-    opacity: 0.8,
+    fontSize: 16,
+    color: '#6B7280',
   },
   form: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    marginBottom: 16,
-    paddingHorizontal: 12,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    height: 50,
-    fontSize: 16,
-    color: '#333',
+    marginBottom: 24,
   },
   button: {
-    backgroundColor: '#4A90E2',
-    borderRadius: 10,
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
+    marginTop: 16,
   },
-  buttonDisabled: {
-    opacity: 0.7,
+  outBtn: {
+    paddingLeft: 8,
+    paddingRight: 8,
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  errorText: {
-    color: '#ff3b30',
-    marginBottom: 10,
+  error: {
+    color: '#EF4444',
+    fontSize: 14,
+    marginTop: 8,
     textAlign: 'center',
   },
-  forgotPassword: {
+  footer: {
     alignItems: 'center',
-    marginTop: 15,
   },
-  forgotPasswordText: {
-    color: '#4A90E2',
-    fontSize: 16,
-  },
-  signupContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  signupText: {
-    color: '#666',
-    fontSize: 16,
-  },
-  signupLink: {
-    color: '#4A90E2',
-    fontSize: 16,
-    fontWeight: 'bold',
+  footerText: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 16,
   },
 });

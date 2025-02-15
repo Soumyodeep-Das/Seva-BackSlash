@@ -1,401 +1,262 @@
 import { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  Image,
-  ActivityIndicator,
-} from 'react-native';
+import { StyleSheet, View, Text, ScrollView } from 'react-native'; // Import Text
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { createAccount, appwrite } from '../../lib/appwrite';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { LinearGradient } from 'expo-linear-gradient';
-import { SelectList } from 'react-native-dropdown-select-list';
-import * as DocumentPicker from 'expo-document-picker';
-import { ID, Query } from 'appwrite';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Input } from '../../components/Input';
+import { Button } from '../../components/Button';
+import { account } from '../../lib/appwrite';
 
-const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+type SignupStep = 1 | 2 | 3;
 
-export default function SignupScreen() {
-  const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    email: '',
-    username: '',
-    password: '',
-    name: '',
-    age: '',
-    weight: '',
-    height: '',
-    bloodGroup: '',
-    profileImage: null as string | null,
-    additionalInfo: '',
-  });
-  const [error, setError] = useState('');
+export default function Signup() {
+  const [step, setStep] = useState<SignupStep>(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const validateEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
+  // Step 1 data
+  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
 
-  const validatePassword = (password: string) => {
-    return password.length >= 6; // Minimum password length
-  };
+  // Step 2 data
+  const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+  const [weight, setWeight] = useState('');
+  const [height, setHeight] = useState('');
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData({ ...formData, [field]: value });
-  };
+  // Step 3 data
+  const [bloodGroup, setBloodGroup] = useState('');
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [additionalInfo, setAdditionalInfo] = useState('');
 
-  const handleNextStep = () => {
-    setError(''); // Clear any previous errors
+  const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
-    if (step === 1) {
-      if (!validateEmail(formData.email)) {
-        setError('Invalid email format.');
-        return;
-      }
-      if (!/^[a-zA-Z0-9]+$/.test(formData.username)) {
-        setError('Username must be alphanumeric.');
-        return;
-      }
-      if (!validatePassword(formData.password)) {
-        setError('Password must be at least 6 characters.');
-        return;
-      }
-    } else if (step === 2) {
-      if (!formData.name) {
-        setError('Name is required.');
-        return;
-      }
-      if (!formData.age || isNaN(Number(formData.age)) || Number(formData.age) < 1 || Number(formData.age) > 120) {
-        setError('Invalid age.');
-        return;
-      }
-      if (!formData.weight || isNaN(Number(formData.weight))) {
-        setError('Invalid weight.');
-        return;
-      }
-      if (!formData.height || isNaN(Number(formData.height))) {
-        setError('Invalid height.');
-        return;
-      }
+  async function handleSignup() {
+    if (step !== 3) {
+      setStep((prev) => (prev + 1) as SignupStep);
+      return;
     }
 
-    setStep(step + 1);
-  };
-
-  const handlePrevStep = () => {
-    setStep(step - 1);
-  };
-
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setFormData({ ...formData, profileImage: result.assets[0].uri });
-    }
-  };
-
-  const uploadImageToAppwrite = async (uri: string) => {
-    try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
-
-      const upload = await appwrite.storage.createFile('unique()', 'avatars', ID.unique(), file);
-      return upload.$id;
-    } catch (error) {
-      console.error('Error uploading image: ', error);
-      setError('Error uploading image. Please try again.');
-      return null;
-    }
-  };
-
-  const handleSubmit = async () => {
     setLoading(true);
     setError('');
 
     try {
-      // 1. Create Account
-      const user = await appwrite.account.create(ID.unique(), formData.email, formData.password, formData.name);
-
-      // 2. Upload profile image
-      let fileId = null;
-      if (formData.profileImage) {
-        fileId = await uploadImageToAppwrite(formData.profileImage);
-        if (!fileId) {
-          setLoading(false);
-          return; // Exit if image upload fails
-        }
-      }
-
-      // 3. Update User Document in Database
-      const userDocument = await appwrite.database.createDocument(
-        'seva', // Database ID
-        'users', // Collection ID
-        user.$id, // Document ID, using user's ID
-        {
-          username: formData.username,
-          age: parseInt(formData.age),
-          weight: parseFloat(formData.weight),
-          height: parseFloat(formData.height),
-          bloodGroup: formData.bloodGroup,
-          additionalInfo: formData.additionalInfo,
-          profileImage: fileId, // Store the file ID
-        }
+      const user = await account.create(
+        'unique()',
+        email,
+        password,
+        username
       );
 
-      // 4. Create Session
-      await appwrite.account.createEmailSession(formData.email, formData.password);
+      await account.createEmailSession(email, password);
 
-      // 5. Get Account
-      const account = await appwrite.account.get();
+      // Here you would typically save the additional user data to your database
+      console.log('Additional user data:', {
+        name,
+        age,
+        weight,
+        height,
+        bloodGroup,
+        profileImage,
+        additionalInfo,
+      });
 
-      // Persist login state using AsyncStorage
-      await AsyncStorage.setItem('isLoggedIn', 'true');
-
-      // Redirect to dashboard
-      router.replace('/(tabs)/home');
-
-    } catch (e: any) {
-      console.log('ERROR', e);
-      setError(e.message || 'Signup failed. Please try again.');
+      router.replace('/(tabs)');
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const renderStepContent = () => {
-    switch (step) {
-      case 1:
-        return (
-          <View>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={formData.email}
-              onChangeText={(text) => handleInputChange('email', text)}
-            />
+  async function pickImage() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
 
-            <Text style={styles.label}>Username</Text>
-            <TextInput
-              style={styles.input}
-              autoCapitalize="none"
-              value={formData.username}
-              onChangeText={(text) => handleInputChange('username', text)}
-            />
-
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              secureTextEntry
-              value={formData.password}
-              onChangeText={(text) => handleInputChange('password', text)}
-            />
-          </View>
-        );
-      case 2:
-        return (
-          <View>
-            <Text style={styles.label}>Name</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.name}
-              onChangeText={(text) => handleInputChange('name', text)}
-            />
-
-            <Text style={styles.label}>Age</Text>
-            <TextInput
-              style={styles.input}
-              keyboardType="number-pad"
-              value={formData.age}
-              onChangeText={(text) => handleInputChange('age', text)}
-            />
-
-            <Text style={styles.label}>Weight (kg or lbs)</Text>
-            <TextInput
-              style={styles.input}
-              keyboardType="number-pad"
-              value={formData.weight}
-              onChangeText={(text) => handleInputChange('weight', text)}
-            />
-
-            <Text style={styles.label}>Height (cm or inches)</Text>
-            <TextInput
-              style={styles.input}
-              keyboardType="number-pad"
-              value={formData.height}
-              onChangeText={(text) => handleInputChange('height', text)}
-            />
-          </View>
-        );
-      case 3:
-        return (
-          <View>
-            <Text style={styles.label}>Blood Group</Text>
-            <SelectList
-              setSelected={(value: any) => handleInputChange('bloodGroup', value)}
-              data={BLOOD_GROUPS.map((bg) => ({ key: bg, value: bg }))}
-              save="value"
-              boxStyles={{ borderRadius: 5, borderColor: '#ccc' }}
-              dropdownStyles={{ borderColor: '#ccc' }}
-            />
-
-            <Text style={styles.label}>Profile Image</Text>
-            <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-              <Text style={styles.uploadButtonText}>Upload Image</Text>
-            </TouchableOpacity>
-            {formData.profileImage && (
-              <Image source={{ uri: formData.profileImage }} style={styles.profileImagePreview} />
-            )}
-
-            <Text style={styles.label}>Additional Personal Info</Text>
-            <TextInput
-              style={styles.textArea}
-              multiline
-              numberOfLines={4}
-              value={formData.additionalInfo}
-              onChangeText={(text) => handleInputChange('additionalInfo', text)}
-            />
-          </View>
-        );
-      default:
-        return null;
+    if (!result.canceled) {
+      setProfileImage(result.assets[0].uri);
     }
-  };
+  }
+
+  function renderStep1() {
+    return (
+      <>
+        <Input
+          label="Email"
+          placeholder="Enter your email"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
+          icon="mail-outline"
+        />
+
+        <Input
+          label="Username"
+          placeholder="Choose a username"
+          autoCapitalize="none"
+          value={username}
+          onChangeText={setUsername}
+          icon="person-outline"
+        />
+
+        <Input
+          label="Password"
+          placeholder="Create a password"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+          icon="lock-closed-outline"
+        />
+      </>
+    );
+  }
+
+  function renderStep2() {
+    return (
+      <>
+        <Input
+          label="Full Name"
+          placeholder="Enter your full name"
+          value={name}
+          onChangeText={setName}
+          icon="person-outline"
+        />
+
+        <Input
+          label="Age"
+          placeholder="Enter your age"
+          keyboardType="numeric"
+          value={age}
+          onChangeText={setAge}
+          icon="calendar-outline"
+        />
+
+        <Input
+          label="Weight (kg)"
+          placeholder="Enter your weight"
+          keyboardType="numeric"
+          value={weight}
+          onChangeText={setWeight}
+          icon="fitness-outline"
+        />
+
+        <Input
+          label="Height (cm)"
+          placeholder="Enter your height"
+          keyboardType="numeric"
+          value={height}
+          onChangeText={setHeight}
+          icon="resize-outline"
+        />
+      </>
+    );
+  }
+
+  function renderStep3() {
+    return (
+      <>
+        <Input
+          label="Blood Group"
+          placeholder="Select your blood group"
+          value={bloodGroup}
+          onChangeText={setBloodGroup}
+          icon="water-outline"
+        />
+
+        <Button
+          title={profileImage ? 'Change Profile Picture' : 'Upload Profile Picture'}
+          onPress={pickImage}
+          variant="secondary"
+          style={styles.button}
+        />
+
+        <Input
+          label="Additional Medical Information"
+          placeholder="Enter any medical conditions, allergies, etc."
+          multiline
+          numberOfLines={4}
+          value={additionalInfo}
+          onChangeText={setAdditionalInfo}
+          icon="medical-outline"
+        />
+      </>
+    );
+  }
 
   return (
-    <LinearGradient colors={['#E0F7FA', '#B2EBF2']} style={styles.container}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
           <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.subtitle}>Step {step} of 3</Text>
+        </View>
+
+        <View style={styles.form}>
+          {step === 1 && renderStep1()}
+          {step === 2 && renderStep2()}
+          {step === 3 && renderStep3()}
+
           {error ? <Text style={styles.error}>{error}</Text> : null}
+        </View>
 
-          {renderStepContent()}
+        <Button
+          title={step === 3 ? (loading ? 'Creating Account...' : 'Create Account') : 'Next'}
+          onPress={handleSignup}
+          style={styles.button}
+        />
 
-          <View style={styles.buttonContainer}>
-            {step > 1 && (
-              <TouchableOpacity style={styles.button} onPress={handlePrevStep}>
-                <Text style={styles.buttonText}>Previous</Text>
-              </TouchableOpacity>
-            )}
-
-            {step < 3 ? (
-              <TouchableOpacity style={styles.button} onPress={handleNextStep}>
-                <Text style={styles.buttonText}>Next</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.buttonText}>Sign Up</Text>
-                )}
-              </TouchableOpacity>
-            )}
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </LinearGradient>
+        {step > 1 && (
+          <Button
+            title="Back"
+            onPress={() => setStep((prev) => (prev - 1) as SignupStep)}
+            variant="secondary"
+            style={styles.button}
+          />
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F9FAFB',
   },
-  scrollContainer: {
+  scrollContent: {
     flexGrow: 1,
-    padding: 20,
-    justifyContent: 'center',
+    padding: 24,
+  },
+  header: {
+    alignItems: 'center',
+    marginVertical: 32,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-    color: '#00796B',
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 8,
   },
-  label: {
+  subtitle: {
     fontSize: 16,
-    marginBottom: 5,
-    color: '#26A69A',
+    color: '#6B7280',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#B2DFDB',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 15,
-    backgroundColor: '#fff',
-  },
-  textArea: {
-    borderWidth: 1,
-    borderColor: '#B2DFDB',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 15,
-    backgroundColor: '#fff',
-    textAlignVertical: 'top', // For Android to align text from the top
-    height: 100,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 20,
+  form: {
+    marginBottom: 24,
   },
   button: {
-    backgroundColor: '#009688',
-    padding: 12,
-    borderRadius: 5,
-    alignItems: 'center',
-    minWidth: 100,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    marginTop: 16,
   },
   error: {
-    color: 'red',
-    marginBottom: 10,
+    color: '#EF4444',
+    fontSize: 14,
+    marginTop: 8,
     textAlign: 'center',
   },
-  uploadButton: {
-    backgroundColor: '#4CAF50',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  uploadButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  profileImagePreview: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 15,
-    alignSelf: 'center',
-  },
 });
-

@@ -1,151 +1,114 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useColorScheme } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { StyleSheet, View, Text, ScrollView, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button } from '../../components/Button';
 
 export default function HomeScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-
-  const features = [
-    {
-      icon: 'videocam',
-      title: 'Video Consultation',
-      description: 'Connect with doctors virtually',
-      route: '/video-consultation',
-    },
-    {
-      icon: 'water',
-      title: 'Blood Bank',
-      description: 'Find blood donors nearby',
-      route: '/blood-bank',
-    },
-    {
-      icon: 'medical',
-      title: 'Find Doctors',
-      description: 'Book appointments with specialists',
-      route: '/doctors',
-    },
-    {
-      icon: 'fitness',
-      title: 'Symptom Checker',
-      description: 'Check your symptoms',
-      route: '/symptoms',
-    },
-  ];
-
   return (
-    <ScrollView style={[styles.container, { backgroundColor: isDark ? '#000000' : '#F5F5F5' }]}>
-      <View style={styles.header}>
-        <Text style={[styles.greeting, { color: isDark ? '#FFFFFF' : '#000000' }]}>
-          Hello, User! 👋
-        </Text>
-        <Text style={[styles.subGreeting, { color: isDark ? '#CCCCCC' : '#666666' }]}>
-          How can we help you today?
-        </Text>
-      </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.greeting}>Hello, User!</Text>
+          <Text style={styles.subtitle}>How can we help you today?</Text>
+        </View>
 
-      <View style={styles.emergencyButton}>
-        <TouchableOpacity
-          style={styles.emergencyTouchable}
-          onPress={() => {/* Handle emergency */}}>
-          <Ionicons name="alert-circle" size={24} color="#FFFFFF" />
-          <Text style={styles.emergencyText}>Emergency Alert</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.featuresGrid}>
-        {features.map((feature, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.featureCard,
-              { backgroundColor: isDark ? '#1A1A1A' : '#FFFFFF' }
-            ]}
-            onPress={() => {}}>
-            <Ionicons
-              name={feature.icon as any}
-              size={32}
-              color="#007AFF"
-              style={styles.featureIcon}
+        <View style={styles.servicesGrid}>
+          <View style={styles.serviceCard}>
+            <Image
+              source={{ uri: 'https://images.unsplash.com/photo-1584982751601-97dcc096659c' }}
+              style={styles.serviceImage}
             />
-            <Text style={[
-              styles.featureTitle,
-              { color: isDark ? '#FFFFFF' : '#000000' }
-            ]}>
-              {feature.title}
+            <Text style={styles.serviceTitle}>Find Doctor</Text>
+            <Text style={styles.serviceDescription}>
+              Book appointments with qualified doctors
             </Text>
-            <Text style={[
-              styles.featureDescription,
-              { color: isDark ? '#CCCCCC' : '#666666' }
-            ]}>
-              {feature.description}
+            <Button title="Book Now" style={styles.serviceButton} />
+          </View>
+
+          <View style={styles.serviceCard}>
+            <Image
+              source={{ uri: 'https://images.unsplash.com/photo-1615461066841-6116e61058f4' }}
+              style={styles.serviceImage}
+            />
+            <Text style={styles.serviceTitle}>Blood Banks</Text>
+            <Text style={styles.serviceDescription}>
+              Find blood banks near you
             </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </ScrollView>
+            <Button title="Search" style={styles.serviceButton} />
+          </View>
+
+          <View style={styles.serviceCard}>
+            <Image
+              source={{ uri: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d' }}
+              style={styles.serviceImage}
+            />
+            <Text style={styles.serviceTitle}>Medicine</Text>
+            <Text style={styles.serviceDescription}>
+              Set reminders for your medications
+            </Text>
+            <Button title="Set Reminder" style={styles.serviceButton} />
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
+  scrollContent: {
+    padding: 24,
   },
   header: {
-    padding: 20,
-    paddingTop: 60,
+    marginBottom: 32,
   },
   greeting: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    color: '#1F2937',
     marginBottom: 8,
   },
-  subGreeting: {
+  subtitle: {
     fontSize: 16,
+    color: '#6B7280',
   },
-  emergencyButton: {
-    margin: 20,
+  servicesGrid: {
+    gap: 16,
   },
-  emergencyTouchable: {
-    backgroundColor: '#FF3B30',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 15,
-    borderRadius: 12,
-    gap: 8,
-  },
-  emergencyText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  featuresGrid: {
-    padding: 10,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  featureCard: {
-    width: '47%',
-    padding: 20,
+  serviceCard: {
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  featureIcon: {
-    marginBottom: 12,
+  serviceImage: {
+    width: '100%',
+    height: 150,
+    borderRadius: 12,
+    marginBottom: 16,
   },
-  featureTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  serviceTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1F2937',
     marginBottom: 8,
   },
-  featureDescription: {
+  serviceDescription: {
     fontSize: 14,
-    lineHeight: 20,
+    color: '#6B7280',
+    marginBottom: 16,
+  },
+  serviceButton: {
+    marginTop: 'auto',
   },
 });
