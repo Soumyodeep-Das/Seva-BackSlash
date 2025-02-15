@@ -2,13 +2,11 @@ import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Button } from '../../components/Button';
 import { LogBox } from 'react-native';
 
 LogBox.ignoreLogs([
   'Text strings must be rendered within a <Text> component.'
 ]);
-
 
 export default function HomeScreen() {
   return (
@@ -20,77 +18,63 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.servicesGrid}>
-          <Link href="/medicine-reminder" asChild>
-            <TouchableOpacity style={styles.serviceCard}>
-              <Image
-                source={{ uri: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae' }}
-                style={styles.serviceImage}
-              />
-              <Text style={styles.serviceTitle}>Medicine Reminder</Text>
-              <Text style={styles.serviceDescription}>
-                Set reminders for your medications
-              </Text>
-              <View style={styles.cardFooter}>
-                <Ionicons name="time-outline" size={20} color="#4C6FFF" />
-                <Text style={styles.cardAction}>Set Reminders</Text>
-              </View>
-            </TouchableOpacity>
-          </Link>
-
-          <Link href="/bmi-calculator" asChild>
-            <TouchableOpacity style={styles.serviceCard}>
-              <Image
-                source={{ uri: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b' }}
-                style={styles.serviceImage}
-              />
-              <Text style={styles.serviceTitle}>BMI Calculator</Text>
-              <Text style={styles.serviceDescription}>
-                Calculate and track your BMI
-              </Text>
-              <View style={styles.cardFooter}>
-                <Ionicons name="calculator-outline" size={20} color="#4C6FFF" />
-                <Text style={styles.cardAction}>Calculate BMI</Text>
-              </View>
-            </TouchableOpacity>
-          </Link>
-
-          <Link href="/blood-banks" asChild>
-            <TouchableOpacity style={styles.serviceCard}>
-              <Image
-                source={{ uri: 'https://images.unsplash.com/photo-1615461066841-6116e61058f4' }}
-                style={styles.serviceImage}
-              />
-              <Text style={styles.serviceTitle}>Blood Banks</Text>
-              <Text style={styles.serviceDescription}>
-                Find blood banks near you
-              </Text>
-              <View style={styles.cardFooter}>
-                <Ionicons name="water-outline" size={20} color="#4C6FFF" />
-                <Text style={styles.cardAction}>Find Banks</Text>
-              </View>
-            </TouchableOpacity>
-          </Link>
-          <Link href="/cardio" asChild>
-                <TouchableOpacity style={styles.serviceCard}>
-                    <Image
-                        source={{ uri: 'https://images.unsplash.com/photo-1584516150909-c43483ee7932' }}
-                        style={styles.serviceImage}
-                    />
-                    <Text style={styles.serviceTitle}>Cardiovascular Prediction</Text>
-                    <Text style={styles.serviceDescription}>
-                        Check your cardiovascular health risk
-                    </Text>
-                    <View style={styles.cardFooter}>
-                        <Ionicons name="heart-outline" size={20} color="#FF4C4C" />
-                        <Text style={styles.cardAction}>Check Now</Text>
-                    </View>
-                </TouchableOpacity>
+          {services.map((service, index) => (
+            <Link key={index} href={service.link} asChild>
+              <TouchableOpacity style={styles.serviceCard}>
+                <Image source={{ uri: service.image }} style={styles.serviceImage} />
+                <Text style={styles.serviceTitle}>{service.title}</Text>
+                <Text style={styles.serviceDescription}>{service.description}</Text>
+                <View style={styles.cardFooter}>
+                  <Ionicons name={service.icon} size={20} color={service.iconColor} />
+                  <Text style={styles.cardAction}>{service.action}</Text>
+                </View>
+              </TouchableOpacity>
             </Link>
+          ))}
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+const services = [
+  {
+    title: 'Medicine Reminder',
+    description: 'Set reminders for your medications',
+    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae',
+    link: '/medicine-reminder',
+    icon: 'time-outline',
+    iconColor: '#4C6FFF',
+    action: 'Set Reminders',
+  },
+  {
+    title: 'BMI Calculator',
+    description: 'Calculate and track your BMI',
+    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b',
+    link: '/bmi-calculator',
+    icon: 'calculator-outline',
+    iconColor: '#4C6FFF',
+    action: 'Calculate BMI',
+  },
+  {
+    title: 'Blood Banks',
+    description: 'Find blood banks near you',
+    image: 'https://images.unsplash.com/photo-1615461066841-6116e61058f4',
+    link: '/blood-banks',
+    icon: 'water-outline',
+    iconColor: '#4C6FFF',
+    action: 'Find Banks',
+  },
+  {
+    title: 'Cardiovascular Prediction',
+    description: 'Check your cardiovascular health risk',
+    image: 'https://images.unsplash.com/photo-1584516150909-c43483ee7932',
+    link: '/cardio',
+    icon: 'heart-outline',
+    iconColor: '#FF4C4C',
+    action: 'Check Now',
+  },
+];
 
 const styles = StyleSheet.create({
   container: {
