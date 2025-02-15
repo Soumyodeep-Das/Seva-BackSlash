@@ -22,7 +22,7 @@ export default function Login() {
     setError('');
 
     try {
-      await account.createEmailSession(email, password);
+      await account.createEmailPasswordSession(email, password);
       const user = await account.get();
       console.log('Logged in user:', user);
       router.replace('/(tabs)');
@@ -66,7 +66,7 @@ export default function Login() {
           />
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
-          }
+          
 
           <Button
             title={loading ? 'Signing in...' : 'Sign In'}

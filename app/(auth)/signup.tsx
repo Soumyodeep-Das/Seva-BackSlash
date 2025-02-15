@@ -5,8 +5,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Input } from '../../components/Input';
 import { Button } from '../../components/Button';
-import { account, databases, USERS_COLLECTION, defaultProfileImages } from '../../lib/appwrite';
+import { createUserAccount, createUserProfile, defaultProfileImages } from '../../lib/appwrite';
 import { Picker } from '@react-native-picker/picker';
+import { databases } from "../appwrite"; // Import your Appwrite config
+
 
 type SignupStep = 1 | 2 | 3;
 
@@ -17,11 +19,11 @@ export default function Signup() {
 
   // Step 1 data
   const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   // Step 2 data
-  const [name, setName] = useState('');
   const [gender, setGender] = useState<'male' | 'female' | 'not-to-answer'>('not-to-answer');
   const [age, setAge] = useState('');
   const [weight, setWeight] = useState('');
@@ -32,10 +34,36 @@ export default function Signup() {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [additionalInfo, setAdditionalInfo] = useState('');
 
-  const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+  async function validateStep1() {
+    if (!email || !password || !name || !confirmPassword) {
+      setError('Please fill in all fields');
+      return false;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return false;
+    }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+
+    return true;
+  }
 
   async function handleSignup() {
     if (step !== 3) {
+      if (step === 1 && !(await validateStep1())) {
+        return;
+      }
       setStep((prev) => (prev + 1) as SignupStep);
       return;
     }
@@ -45,35 +73,22 @@ export default function Signup() {
 
     try {
       // Create user account
-      const user = await account.create(
-        'unique()',
-        email,
-        password,
-        username
-      );
+      const user = await createUserAccount(email, password, name);
 
-      // Create session
-      await account.createEmailSession(email, password);
-
-      // Save additional user data
+      // Create user profile
       const photoUrl = profileImage || (gender !== 'not-to-answer' ? defaultProfileImages[gender] : undefined);
 
-      await databases.createDocument(
-        'default',
-        USERS_COLLECTION,
-        user.$id,
-        {
-          email,
-          name,
-          gender,
-          age,
-          weight,
-          height,
-          bloodGroup,
-          additionalInfo,
-          photoUrl,
-        }
-      );
+      await createUserProfile(user.$id, {
+        email,
+        name,
+        gender,
+        age,
+        weight,
+        height,
+        bloodGroup,
+        additionalInfo,
+        photoUrl,
+      });
 
       router.replace('/(tabs)');
     } catch (err: any) {
@@ -110,11 +125,10 @@ export default function Signup() {
         />
 
         <Input
-          label="Username"
-          placeholder="Choose a username"
-          autoCapitalize="none"
-          value={username}
-          onChangeText={setUsername}
+          label="Full Name"
+          placeholder="Enter your full name"
+          value={name}
+          onChangeText={setName}
           icon="person-outline"
         />
 
@@ -126,6 +140,15 @@ export default function Signup() {
           onChangeText={setPassword}
           icon="lock-closed-outline"
         />
+
+        <Input
+          label="Confirm Password"
+          placeholder="Confirm your password"
+          secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          icon="lock-closed-outline"
+        />
       </>
     );
   }
@@ -133,20 +156,12 @@ export default function Signup() {
   function renderStep2() {
     return (
       <>
-        <Input
-          label="Full Name"
-          placeholder="Enter your full name"
-          value={name}
-          onChangeText={setName}
-          icon="person-outline"
-        />
-
         <View style={styles.pickerContainer}>
           <Text style={styles.label}>Gender</Text>
           <View style={styles.picker}>
             <Picker
               selectedValue={gender}
-              onValueChange={(value) => setGender(value)}
+              onValueChange={(value: 'male' | 'female' | 'not-to-answer') => setGender(value)}
             >
               <Picker.Item label="Prefer not to answer" value="not-to-answer" />
               <Picker.Item label="Male" value="male" />

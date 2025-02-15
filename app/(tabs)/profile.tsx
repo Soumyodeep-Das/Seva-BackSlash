@@ -1,36 +1,42 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, ScrollView, Image } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Button } from '../../components/Button';
-import { account, databases, USERS_COLLECTION, UserProfile, defaultProfileImages } from '../../lib/appwrite';
+import { account, databases, USERS_COLLECTION, DATABASE_ID, UserProfile, defaultProfileImages } from '../../lib/appwrite';
 
 export default function ProfileScreen() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadUserProfile();
-  }, []);
+    const fetchUserProfile = async () => {
+      try {
+        const user = await account.get();
+        console.log('Authenticated User:', user);
 
-  async function loadUserProfile() {
-    try {
-      const user = await account.get();
-      const profile = await databases.getDocument('default', USERS_COLLECTION, user.$id);
-      setUserProfile(profile as unknown as UserProfile);
-    } catch (error) {
-      console.error('Error loading user profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
+        const profile = await databases.getDocument(DATABASE_ID, USERS_COLLECTION, user.$id);
+        console.log('Fetched User Profile:', profile);
+
+        setUserProfile(profile as unknown as UserProfile);
+      } catch (err: any) {
+        console.error('Error fetching user profile:', err);
+        setError('Failed to load profile. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   async function handleLogout() {
     try {
       await account.deleteSession('current');
       router.replace('/(auth)/login');
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch (err) {
+      console.error('Logout error:', err);
     }
   }
 
@@ -38,7 +44,19 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3498db" />
           <Text>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <Button title="Retry" onPress={() => window.location.reload()} />
         </View>
       </SafeAreaView>
     );
@@ -49,11 +67,11 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Image
-            source={{ 
-              uri: userProfile?.photoUrl || 
-                   (userProfile?.gender === 'male' ? defaultProfileImages.male :
-                    userProfile?.gender === 'female' ? defaultProfileImages.female :
-                    'https://images.unsplash.com/photo-1511367461989-f85a21fda167')
+            source={{
+              uri: userProfile?.photoUrl ||
+                (userProfile?.gender === 'male' ? defaultProfileImages.male :
+                  userProfile?.gender === 'female' ? defaultProfileImages.female :
+                  'https://images.unsplash.com/photo-1511367461989-f85a21fda167')
             }}
             style={styles.avatar}
           />
@@ -116,6 +134,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: 'red',
+    marginBottom: 10,
   },
   scrollContent: {
     padding: 24,

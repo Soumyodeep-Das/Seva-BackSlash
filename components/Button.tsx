@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react'; // Import React and forwardRef
+import React, { forwardRef } from 'react';
 import { StyleSheet, Text, TouchableOpacity, ViewStyle, TextStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -9,7 +9,6 @@ interface ButtonProps {
   style?: ViewStyle;
 }
 
-// Wrap the Button component with forwardRef
 export const Button = forwardRef<TouchableOpacity, ButtonProps>(
   ({ onPress, title, variant = 'primary', style }, ref) => {
     if (variant === 'primary') {
@@ -91,5 +90,4 @@ const styles = StyleSheet.create({
   },
 });
 
-// Set display name for debugging purposes
 Button.displayName = "Button";
