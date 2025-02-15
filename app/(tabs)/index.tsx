@@ -70,6 +70,22 @@ export default function HomeScreen() {
               </View>
             </TouchableOpacity>
           </Link>
+          <Link href="/cardio" asChild>
+                <TouchableOpacity style={styles.serviceCard}>
+                    <Image
+                        source={{ uri: 'https://images.unsplash.com/photo-1584516150909-c43483ee7932' }}
+                        style={styles.serviceImage}
+                    />
+                    <Text style={styles.serviceTitle}>Cardiovascular Prediction</Text>
+                    <Text style={styles.serviceDescription}>
+                        Check your cardiovascular health risk
+                    </Text>
+                    <View style={styles.cardFooter}>
+                        <Ionicons name="heart-outline" size={20} color="#FF4C4C" />
+                        <Text style={styles.cardAction}>Check Now</Text>
+                    </View>
+                </TouchableOpacity>
+            </Link>
         </View>
       </ScrollView>
     </SafeAreaView>
