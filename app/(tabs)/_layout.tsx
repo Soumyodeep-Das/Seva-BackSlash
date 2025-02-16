@@ -75,15 +75,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="appointments"
-        options={{
-          title: 'Appointment',
-          tabBarIcon: ({ size, color }) => (
-            <Ionicons name="people-outline" size={size} color={color} />
-          ),
-        }}
-      />
     </Tabs>
   );
 }

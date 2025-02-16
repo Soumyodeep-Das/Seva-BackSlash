@@ -22,7 +22,7 @@ const AIPredictionScreen = () => {
 
     const sendApiRequest = async () => {
         try {
-            const response = await fetch('http://192.168.11.248:5000/predict', {
+            const response = await fetch(process.env.EXPO_PUBLIC_CARDIO, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
